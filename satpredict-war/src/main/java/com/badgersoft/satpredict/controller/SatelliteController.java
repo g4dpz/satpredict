@@ -4,11 +4,12 @@ import com.badgersoft.satpredict.dao.AliasDao;
 import com.badgersoft.satpredict.dao.TleDao;
 import com.badgersoft.satpredict.domain.TleEntity;
 import com.badgersoft.satpredict.dto.SatPosDTO;
-import com.badgersoft.satpredict.shared.PassesDTO;
-import com.badgersoft.satpredict.shared.SatelliteCharacter;
-import com.badgersoft.satpredict.shared.SatelliteCharacteristics;
+import com.badgersoft.satpredict.client.dto.PassesDTO;
+import com.badgersoft.satpredict.client.dto.SatelliteCharacter;
+import com.badgersoft.satpredict.client.dto.SatelliteCharacteristics;
 import com.badgersoft.satpredict.utils.Cache;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -36,7 +37,7 @@ public class SatelliteController {
     @Autowired
     Cache cache;
 
-    @RequestMapping(value = "/info", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/info", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ResponseBody
     @Transactional(isolation = Isolation.READ_COMMITTED, readOnly = true)
     public SatelliteCharacteristics getCharacterstics(HttpServletRequest request,
@@ -73,7 +74,7 @@ public class SatelliteController {
 
     }
 
-    @RequestMapping(value = "/info/{catnum}", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/info/{catnum}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ResponseBody
     @Transactional(isolation = Isolation.READ_COMMITTED, readOnly = true)
     public SatelliteCharacter getCharacterstics(
@@ -104,7 +105,7 @@ public class SatelliteController {
 
     }
 
-    @RequestMapping(value = "/position/{catnum}", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/position/{catnum}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ResponseBody
     @Transactional(isolation = Isolation.READ_COMMITTED, readOnly = true)
     public SatPosDTO getPosition(
@@ -153,7 +154,7 @@ public class SatelliteController {
 
     }
 
-    @RequestMapping(value = "/predict/{catnum}", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/predict/{catnum}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ResponseBody
     @Transactional(isolation = Isolation.READ_COMMITTED, readOnly = true)
     public PassesDTO predict(

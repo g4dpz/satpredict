@@ -1,4 +1,4 @@
-package com.badgersoft.satpredict.shared;
+package com.badgersoft.satpredict.client.dto;
 
 import com.badgersoft.satpredict.domain.AliasEntity;
 

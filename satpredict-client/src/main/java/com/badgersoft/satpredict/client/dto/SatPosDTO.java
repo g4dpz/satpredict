@@ -1,4 +1,4 @@
-package com.badgersoft.satpredict.client;
+package com.badgersoft.satpredict.client.dto;
 
 import java.io.Serializable;
 

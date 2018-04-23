@@ -1,5 +1,6 @@
 package com.badgersoft.satpredict.client;
 
+import com.badgersoft.satpredict.client.dto.SatPosDTO;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;

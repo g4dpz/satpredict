@@ -1,4 +1,4 @@
-package com.badgersoft.satpredict.shared;
+package com.badgersoft.satpredict.client.dto;
 
 import uk.me.g4dpz.satellite.SatPassTime;
 
