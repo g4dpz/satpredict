@@ -13,7 +13,82 @@
     </modules>
     <packaging>pom</packaging>
 
+    <scm>
+        <connection>scm:git:git@github.com:badgersoftdotcom/predict4java.git</connection>
+        <url>scm:git:git@github.com:badgersoftdotcom/predict4java.git</url>
+        <developerConnection>scm:git:git@github.com:badgersoftdotcom/predict4java.git</developerConnection>
+    </scm>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.8.1</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.5.1</version>
+                <executions>
+                    <execution>
+                        <id>default-deploy</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>deploy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <serverId>nexus</serverId>
+                    <nexusUrl>https://nexus.badgersoft.com/</nexusUrl>
+                    <skipStaging>true</skipStaging>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>badgersoft-snapshot</id>
+            <url>https://nexus.badgersoft.com/repository/badgersoft-snapshot/</url>
+        </snapshotRepository>
+        <repository>
+            <id>badgersoft-release</id>
+            <url>https://nexus.badgersoft.com/repository/badgersoft-release/</url>
+        </repository>
+    </distributionManagement>
+
+    <profiles>
+        <profile>
+            <id>releases</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.5.1</version>
+                        <executions>
+                            <execution>
+                                <id>default-deploy</id>
+                                <phase>deploy</phase>
+                                <goals>
+                                    <goal>deploy</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <serverId>badgersoft-releases</serverId>
+                            <nexusUrl>https://nexus.badgersoft.com/</nexusUrl>
+                            <skipStaging>true</skipStaging>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
