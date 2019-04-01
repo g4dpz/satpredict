@@ -1,5 +1,7 @@
 package com.badgersoft.satpredict.config;
 
+import com.badgersoft.satpredict.service.SatelliteService;
+import com.badgersoft.satpredict.service.SatelliteServiceImpl;
 import com.badgersoft.satpredict.service.TleUpdateService;
 import com.badgersoft.satpredict.service.TleUpdateServiceImpl;
 import com.badgersoft.satpredict.utils.Cache;
@@ -25,6 +27,9 @@ public class AppConfig {
 
     @Bean
     public TleUpdateService tleUpdateService() { return new TleUpdateServiceImpl(); }
+
+    @Bean
+    public SatelliteService satelliteService() { return new SatelliteServiceImpl(); }
 
     @Bean
     public Cache cache() {

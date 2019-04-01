@@ -19,6 +19,7 @@
 
 package com.badgersoft.satpredict.config;
 
+import com.badgersoft.satpredict.service.SatelliteService;
 import com.badgersoft.satpredict.service.TleUpdateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -29,12 +30,23 @@ import org.springframework.scheduling.annotation.Scheduled;
 @EnableScheduling
 public class ScheduleConfig {
 
-    @Autowired
+    public static final String FC1_NORAD_ID = "39444";
+    public static final String NAYIF1_NRAD_ID = "42017";
+    public static final String JY1SAT_NORAD_ID = "43803";
+
     private TleUpdateService tleUpdateService;
+    private SatelliteService satelliteService;
+
+    @Autowired
+    public ScheduleConfig(TleUpdateService tleUpdateService, SatelliteService satelliteService) {
+        this.tleUpdateService = tleUpdateService;
+        this.satelliteService = satelliteService;
+    }
 
     @Scheduled(initialDelay = 30000, fixedRate = 86400000)
     public void tleProcessorTask() {
         tleUpdateService.doUpdate();
+        satelliteService.reserveStellarStationSlots(FC1_NORAD_ID, NAYIF1_NRAD_ID, JY1SAT_NORAD_ID);
     }
 
 }

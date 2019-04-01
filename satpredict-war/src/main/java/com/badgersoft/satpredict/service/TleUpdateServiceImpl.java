@@ -90,10 +90,12 @@ public class TleUpdateServiceImpl implements TleUpdateService {
                         }
                         else {
                             tleEntity = tleEntityList.get(0);
+                            int year = Integer.parseInt(lines[1].substring(18, 20));
                             double refEpoch = Double.parseDouble(lines[1].substring(20, 32));
-                            if (refEpoch > tleEntity.getRefepoch()) {
+                            if (year > tleEntity.getYear() || (year == tleEntity.getYear() && refEpoch > tleEntity.getRefepoch())) {
                                 LOG.debug(String.format("Replacing: %s", lines[0].trim()));
                                 tleEntity.replaceContent(lines, now);
+                                tleEntity.setYear(year);
                                 tleEntity.setRefepoch(refEpoch);
                                 tlesUpdated++;
                             }
@@ -169,6 +171,9 @@ public class TleUpdateServiceImpl implements TleUpdateService {
     private long getCatnum(final String line) {
         return Long.parseLong(StringUtils.strip(line.substring(2, 7)));
     }
+
+
+
 
 
 

@@ -1,25 +1,19 @@
 package com.badgersoft.satpredict.controller;
 
-import com.badgersoft.satpredict.dao.AliasDao;
-import com.badgersoft.satpredict.dao.TleDao;
-import com.badgersoft.satpredict.domain.TleEntity;
-import com.badgersoft.satpredict.dto.SatPosDTO;
 import com.badgersoft.satpredict.client.dto.PassesDTO;
 import com.badgersoft.satpredict.client.dto.SatelliteCharacter;
 import com.badgersoft.satpredict.client.dto.SatelliteCharacteristics;
-import com.badgersoft.satpredict.utils.Cache;
+import com.badgersoft.satpredict.dto.SatPosDTO;
+import com.badgersoft.satpredict.service.SatelliteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import uk.me.g4dpz.satellite.*;
+import uk.me.g4dpz.satellite.SatPos;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * Created by davidjohnson on 30/08/2016.
@@ -29,13 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 public class SatelliteController {
 
     @Autowired
-    TleDao tleDao;
-
-    @Autowired
-    AliasDao aliasDao;
-
-    @Autowired
-    Cache cache;
+    SatelliteService satelliteService;
 
     @RequestMapping(value = "/info", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ResponseBody
@@ -43,30 +31,7 @@ public class SatelliteController {
     public SatelliteCharacteristics getCharacterstics(HttpServletRequest request,
                                                       HttpServletResponse response) {
 
-        Iterator<TleEntity> iterator = tleDao.findAll().iterator();
-
-        ConcurrentMap<Long, SatelliteCharacter> satelliteCharacterMap = new ConcurrentHashMap<>();
-
-        while (iterator.hasNext()) {
-            TleEntity tleEntity = iterator.next();
-            long catnum = tleEntity.getCatnum();
-            SatelliteCharacter satelliteCharacter = new SatelliteCharacter();
-            satelliteCharacter.setCatnum(catnum);
-            satelliteCharacter.setAliases(tleEntity.getAliases());
-            satelliteCharacterMap.put(catnum,satelliteCharacter);
-        }
-
-        List<SatelliteCharacter> satelliteCharacterList = new ArrayList<>();
-
-        Iterator<Map.Entry<Long, SatelliteCharacter>> satelliteMapIterator
-                = satelliteCharacterMap.entrySet().iterator();
-
-        while (satelliteMapIterator.hasNext()) {
-            satelliteCharacterList.add(satelliteMapIterator.next().getValue());
-        }
-
-        SatelliteCharacteristics characteristics = new SatelliteCharacteristics();
-        characteristics.setCharacters(satelliteCharacterList);
+        SatelliteCharacteristics characteristics = satelliteService.getSatelliteCharacteristics();
 
         response.setStatus(HttpServletResponse.SC_OK);
 
@@ -82,24 +47,15 @@ public class SatelliteController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
-        SatelliteCharacter satelliteCharacter = new SatelliteCharacter();
+        SatelliteCharacter satelliteCharacter = satelliteService.getSatelliteCharacter(catnum);
 
-        if (!cache.containsKey(catnum)) {
-            List<TleEntity> tleEntities = tleDao.findByCatnum(catnum);
-            if ((tleEntities != null) && !tleEntities.isEmpty()) {
-                cache.put(catnum, tleEntities.get(0), 86400000L);
-            }
-            else {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                return null;
-            }
+        if (satelliteCharacter != null) {
+            response.setStatus(HttpServletResponse.SC_OK);
+        }
+        else {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         }
 
-        TleEntity tleEntity = (TleEntity) cache.get(catnum);
-
-        satelliteCharacter.setAliases(tleEntity.getAliases());
-        satelliteCharacter.setCatnum(catnum);
-        response.setStatus(HttpServletResponse.SC_OK);
 
         return satelliteCharacter;
 
@@ -116,29 +72,12 @@ public class SatelliteController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
-        SatPos satPos;
+        SatPos satPos = satelliteService.getPosition(catnum, latitude, longitude, altitude);
 
-        if (!cache.containsKey(catnum)) {
-            List<TleEntity> tleEntities = tleDao.findByCatnum(catnum);
-            if ((tleEntities != null) && !tleEntities.isEmpty()) {
-                cache.put(catnum, tleEntities.get(0), 86400000L);
-            }
-            else {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                return null;
-            }
+        if (satPos == null) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return null;
         }
-
-        TleEntity tleEntity = (TleEntity) cache.get(catnum);
-
-        String[] lines = new String[] {tleEntity.getLine1(), tleEntity.getLine2(), tleEntity.getLine3()};
-
-        TLE tle = new TLE(lines);
-
-        Satellite satellite = SatelliteFactory.createSatellite(tle);
-
-        Date now = new Date(System.currentTimeMillis());
-        satPos = satellite.getPosition(new GroundStationPosition(latitude, longitude, altitude), now);
 
         response.setStatus(HttpServletResponse.SC_OK);
 
@@ -166,32 +105,17 @@ public class SatelliteController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
-        if (!cache.containsKey(catnum)) {
-            List<TleEntity> tleEntities = tleDao.findByCatnum(catnum);
-            if ((tleEntities != null) && !tleEntities.isEmpty()) {
-                cache.put(catnum, tleEntities.get(0), 86400000L);
-            }
-            else {
+        try {
+            PassesDTO passesDTO = satelliteService.getPassesDTO(catnum, latitude, longitude, altitude, hours);
+
+            if (passesDTO == null) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 return null;
             }
-        }
-
-        TleEntity tleEntity = (TleEntity) cache.get(catnum);
-
-        String[] lines = new String[] {tleEntity.getLine1(), tleEntity.getLine2(), tleEntity.getLine3()};
-
-        TLE tle = new TLE(lines);
-
-        Date now = new Date(System.currentTimeMillis());
-        PassPredictor passPredictor;
-
-        try {
-            passPredictor = new PassPredictor(tle, new GroundStationPosition(latitude, longitude, altitude));
-            List<SatPassTime> passes = passPredictor.getPasses(now, hours, true);
-            PassesDTO passesDTO = new PassesDTO(passes);
-            response.setStatus(HttpServletResponse.SC_OK);
-            return passesDTO;
+            else {
+                response.setStatus(HttpServletResponse.SC_OK);
+                return passesDTO;
+            }
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return null;
