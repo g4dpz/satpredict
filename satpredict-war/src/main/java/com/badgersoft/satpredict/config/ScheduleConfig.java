@@ -26,6 +26,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import java.io.IOException;
+
 @Configuration
 @EnableScheduling
 public class ScheduleConfig {
@@ -46,7 +48,11 @@ public class ScheduleConfig {
     @Scheduled(initialDelay = 30000, fixedRate = 86400000)
     public void tleProcessorTask() {
         tleUpdateService.doUpdate();
-        satelliteService.reserveStellarStationSlots(FC1_NORAD_ID, NAYIF1_NRAD_ID, JY1SAT_NORAD_ID);
+        try {
+            satelliteService.reserveStellarStationSlots(FC1_NORAD_ID, NAYIF1_NRAD_ID, JY1SAT_NORAD_ID);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

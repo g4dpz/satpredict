@@ -8,9 +8,11 @@ import uk.me.g4dpz.satellite.InvalidTleException;
 import uk.me.g4dpz.satellite.SatNotFoundException;
 import uk.me.g4dpz.satellite.SatPos;
 
+import java.io.IOException;
+
 @Service
 public interface SatelliteService {
-    void reserveStellarStationSlots(String... noradeIdList);
+    void reserveStellarStationSlots(String... noradeIdList) throws IOException;
 
     SatelliteCharacteristics getSatelliteCharacteristics();
 
