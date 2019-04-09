@@ -10,9 +10,7 @@ import com.badgersoft.satpredict.domain.TleEntity;
 import com.badgersoft.satpredict.utils.Cache;
 import com.google.auth.oauth2.ServiceAccountJwtAccessCredentials;
 import com.google.protobuf.Timestamp;
-import com.stellarstation.api.v1.groundstation.AddUnavailabilityWindowRequest;
-import com.stellarstation.api.v1.groundstation.AddUnavailabilityWindowResponse;
-import com.stellarstation.api.v1.groundstation.GroundStationServiceGrpc;
+import com.stellarstation.api.v1.groundstation.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.auth.MoreCallCredentials;
@@ -35,6 +33,7 @@ import java.util.concurrent.ConcurrentMap;
 public class SatelliteServiceImpl implements SatelliteService {
 
     private static final Logger LOG = LoggerFactory.getLogger(TleUpdateServiceImpl.class);
+    public static final int THREE_DAYS_MILLS = (3 * 24 * 60 * 60 * 1000);
 
     private static String STELLARSTATION_API_KEY = null;
 
@@ -55,6 +54,7 @@ public class SatelliteServiceImpl implements SatelliteService {
     public void reserveStellarStationSlots(String... noradeIdList) throws IOException {
 
         try {
+            removeUnavailableSlots();
             bookUnavailableSlots(39444L, 42017L, 43803L);
         } catch (Exception e) {
             LOG.error(e.getMessage());
@@ -176,6 +176,84 @@ public class SatelliteServiceImpl implements SatelliteService {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void removeUnavailableSlots() throws IOException {
+
+        // Load the private key downloaded from the StellarStation Console.
+        ServiceAccountJwtAccessCredentials credentials =
+                ServiceAccountJwtAccessCredentials.fromStream(
+                        this.getClass().getResource("/stellarstation-private-key.json").openStream(),
+                        URI.create("https://api.stellarstation.com"));
+        LOG.info(credentials.toString());
+
+        // Setup the gRPC client.
+        ManagedChannel channel =
+                ManagedChannelBuilder.forAddress("api.stellarstation.com", 443)
+                        .build();
+
+        GroundStationServiceGrpc.GroundStationServiceStub client =
+                GroundStationServiceGrpc.newStub(channel)
+                        .withCallCredentials(MoreCallCredentials.from(credentials));
+
+        final Date time1 = new Date();
+
+        final Timestamp startTime = Timestamp.newBuilder().setSeconds(time1.getTime() / 1000).build();
+        final Timestamp endTime = Timestamp.newBuilder().setSeconds((time1.getTime() + THREE_DAYS_MILLS) / 1000).build();
+
+        ListUnavailabilityWindowsRequest listUnavailabilityWindowsRequest
+                = ListUnavailabilityWindowsRequest.newBuilder()
+                .setGroundStationId("15")
+                .setStartTime(startTime)
+                .setEndTime(endTime)
+                .build();
+
+        StreamObserver<ListUnavailabilityWindowsResponse> listObserver = new StreamObserver<ListUnavailabilityWindowsResponse>() {
+
+            @Override
+            public void onNext(ListUnavailabilityWindowsResponse listUnavailabilityWindowsResponse) {
+                final List<UnavailabilityWindow> windowList = listUnavailabilityWindowsResponse.getWindowList();
+
+                for (UnavailabilityWindow window : windowList) {
+                    DeleteUnavailabilityWindowRequest windowRequest
+                            = DeleteUnavailabilityWindowRequest.newBuilder()
+                            .setWindowId(window.getWindowId())
+                            .build();
+
+                    StreamObserver<DeleteUnavailabilityWindowResponse> deleteObserver = new StreamObserver<DeleteUnavailabilityWindowResponse>() {
+
+                        @Override
+                        public void onNext(DeleteUnavailabilityWindowResponse response) {
+                        }
+
+                        @Override
+                        public void onError(Throwable throwable) {
+                            throwable.printStackTrace();
+                        }
+
+                        @Override
+                        public void onCompleted() {
+                            LOG.info("Complete");
+                        }
+                    };
+
+                    client.deleteUnavailabilityWindow(windowRequest, deleteObserver);
+                }
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                throwable.printStackTrace();
+            }
+
+            @Override
+            public void onCompleted() {
+                LOG.info("Complete");
+            }
+        };
+
+        client.listUnavailabilityWindows(listUnavailabilityWindowsRequest, listObserver);
+
     }
 
     private void bookUnavailableSlots(long... catalogueNumbers) throws SatNotFoundException, InvalidTleException, IOException {
