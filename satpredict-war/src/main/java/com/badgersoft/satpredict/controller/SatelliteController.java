@@ -1,9 +1,9 @@
 package com.badgersoft.satpredict.controller;
 
 import com.badgersoft.satpredict.client.dto.PassesDTO;
+import com.badgersoft.satpredict.client.dto.SatPosDTO;
 import com.badgersoft.satpredict.client.dto.SatelliteCharacter;
 import com.badgersoft.satpredict.client.dto.SatelliteCharacteristics;
-import com.badgersoft.satpredict.dto.SatPosDTO;
 import com.badgersoft.satpredict.service.SatelliteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;

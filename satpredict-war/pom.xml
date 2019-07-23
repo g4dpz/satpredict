@@ -178,11 +178,11 @@
             <artifactId>jackson-databind</artifactId>
             <version>2.4.1.1</version>
         </dependency>
-        <dependency>
-            <groupId>com.badgersoft</groupId>
-            <artifactId>satpredict-shared</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.badgersoft</groupId>-->
+<!--            <artifactId>satpredict-shared</artifactId>-->
+<!--            <version>1.0-SNAPSHOT</version>-->
+<!--        </dependency>-->
 
     </dependencies>
 
