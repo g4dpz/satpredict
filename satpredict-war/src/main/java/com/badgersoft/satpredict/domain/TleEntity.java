@@ -50,6 +50,11 @@ public class TleEntity implements Serializable {
     @OneToMany(mappedBy = "tle", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<AliasEntity> aliases = new ArrayList<>(0);
 
+    @ManyToOne
+    @JoinColumn(name = "constellation_id")
+    private ConstellationEntity constellation;
+
+
     public TleEntity() {
 
     }
@@ -336,5 +341,13 @@ public class TleEntity implements Serializable {
     @Transient
     private long getCatnumFromLine(final String line) {
         return Long.parseLong(StringUtils.strip(line.substring(2, 7)));
+    }
+
+    public ConstellationEntity getConstellation() {
+        return constellation;
+    }
+
+    public void setConstellation(ConstellationEntity constellation) {
+        this.constellation = constellation;
     }
 }
