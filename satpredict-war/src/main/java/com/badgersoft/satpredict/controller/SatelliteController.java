@@ -14,6 +14,8 @@ import uk.me.g4dpz.satellite.SatPos;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by davidjohnson on 30/08/2016.
@@ -21,6 +23,8 @@ import javax.servlet.http.HttpServletResponse;
 @RestController
 @RequestMapping("/satellite")
 public class SatelliteController {
+
+    private final Lock lock = new ReentrantLock();
 
     @Autowired
     SatelliteService satelliteService;
@@ -72,24 +76,32 @@ public class SatelliteController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
-        SatPos satPos = satelliteService.getPosition(catnum, latitude, longitude, altitude);
+        lock.lock();
 
-        if (satPos == null) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return null;
+        try {
+            SatPos satPos = satelliteService.getPosition(catnum, latitude, longitude, altitude);
+
+            if (satPos == null) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return null;
+            }
+
+            response.setStatus(HttpServletResponse.SC_OK);
+
+            return new SatPosDTO(
+                    satPos.getLatitude(),
+                    satPos.getLongitude(),
+                    satPos.getAltitude(),
+                    satPos.getAzimuth(),
+                    satPos.getElevation(),
+                    satPos.getRange(),
+                    satPos.getRangeRate()
+            );
+        }
+        finally {
+            lock.unlock();
         }
 
-        response.setStatus(HttpServletResponse.SC_OK);
-
-        return new SatPosDTO(
-            satPos.getLatitude(),
-            satPos.getLongitude(),
-            satPos.getAltitude(),
-            satPos.getAzimuth(),
-            satPos.getElevation(),
-            satPos.getRange(),
-            satPos.getRangeRate()
-        );
 
     }
 
