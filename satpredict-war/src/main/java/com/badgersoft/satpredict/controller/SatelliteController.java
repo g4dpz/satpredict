@@ -5,6 +5,8 @@ import com.badgersoft.satpredict.client.dto.SatPosDTO;
 import com.badgersoft.satpredict.client.dto.SatelliteCharacter;
 import com.badgersoft.satpredict.client.dto.SatelliteCharacteristics;
 import com.badgersoft.satpredict.service.SatelliteService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Isolation;
@@ -25,6 +27,8 @@ import java.util.concurrent.locks.ReentrantLock;
 public class SatelliteController {
 
     private final Lock lock = new ReentrantLock();
+
+    private static final Logger LOG = LoggerFactory.getLogger(SatelliteController.class);
 
     @Autowired
     SatelliteService satelliteService;
@@ -79,10 +83,12 @@ public class SatelliteController {
         lock.lock();
 
         try {
+
             SatPos satPos = satelliteService.getPosition(catnum, latitude, longitude, altitude);
 
             if (satPos == null) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                LOG.error("Satellite catNum " + catnum + " not found");
                 return null;
             }
 
